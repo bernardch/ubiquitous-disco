@@ -16,116 +16,128 @@ import (
 //		curl -F 'file=@/path/matrix.csv' "localhost:8080/echo"
 
 func main() {
-	// Return incoming csv as a matrix
-	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
-		records := parseMatrix(w, r)
-		if records == nil {
-			return
-		}
-		var response string
-		for _, row := range records {
-			response = fmt.Sprintf("%s%s\n", response, strings.Join(row, ","))
-		}
-		fmt.Fprint(w, response)
-	})
-	// Return incoming csv as inverted matrix
-	http.HandleFunc("/invert", func(w http.ResponseWriter, r *http.Request) {
-		records := parseMatrix(w, r)
-		if records == nil {
-			return
-		}
-		// No need to traverse empty matrix
-		if len(records) == 0 {
-			return
-		}
-		numRows := len(records)
-		numCols := len(records[0])
-		var response strings.Builder                        // Use string Builder for more efficient writing
-		for colIndex := 0; colIndex < numCols; colIndex++ { // Column-major traversal to invert matrix
-			for rowIndex := 0; rowIndex < numRows; rowIndex++ {
-				response.WriteString(strings.TrimSpace(records[rowIndex][colIndex]))
-				if rowIndex < numRows-1 {
-					response.WriteString(",") // Add commas to all rows except last row
-				}
-			}
-			response.WriteString("\n")
-		}
-		fmt.Fprint(w, response.String())
-	})
-	// Return incoming csv as single flattened array
-	http.HandleFunc("/flatten", func(w http.ResponseWriter, r *http.Request) {
-		records := parseMatrix(w, r)
-		if records == nil {
-			return
-		}
-		// if len(records) == 0 {
-		// 	return
-		// }
-		var response strings.Builder
-		numRows := len(records)
-		for i, row := range records {
-			response.WriteString(strings.Join(row, ","))
-			if i < numRows-1 {
-				response.WriteString(",")
-			}
-		}
-		fmt.Fprint(w, response.String())
-	})
-	// Return sum of all values in csv
-	http.HandleFunc("/sum", func(w http.ResponseWriter, r *http.Request) {
-		records := parseMatrix(w, r)
-		if records == nil {
-			return
-		}
-		// valid empty matrix case
-		if len(records) == 0 {
-			fmt.Fprint(w, "0\n")
-			return
-		}
-		numRows := len(records)
-		numCols := len(records[0])
-		// Use big for potentially massive numbers
-		sum := big.NewInt(0)
-		cnum := new(big.Int)
-		for rowIndex := 0; rowIndex < numRows; rowIndex++ {
-			for colIndex := 0; colIndex < numCols; colIndex++ {
-				cnum.SetString(records[rowIndex][colIndex], 10)
-				sum.Add(sum, cnum)
-			}
-		}
-		var response string = fmt.Sprintf("%s\n", sum)
-		fmt.Fprint(w, response)
-	})
-	// Return product of all values in csv
-	http.HandleFunc("/multiply", func(w http.ResponseWriter, r *http.Request) {
-		records := parseMatrix(w, r)
-		if records == nil {
-			return
-		}
-		if len(records) == 0 {
-			fmt.Fprint(w, "0\n")
-			return
-		}
-		numRows := len(records)
-		numCols := len(records[0])
-		product := big.NewInt(1)
-		cnum := new(big.Int)
-		for rowIndex := 0; rowIndex < numRows; rowIndex++ {
-			for colIndex := 0; colIndex < numCols; colIndex++ {
-				cnum.SetString(records[rowIndex][colIndex], 10)
-				product.Mul(product, cnum)
-			}
-		}
-		var response string = fmt.Sprintf("%s\n", product)
-		fmt.Fprint(w, response)
-	})
+	http.HandleFunc("/echo", echoHandler)
+	http.HandleFunc("/invert", invertHandler)
+	http.HandleFunc("/flatten", flattenHandler)
+	http.HandleFunc("/sum", sumHandler)
+	http.HandleFunc("/multiply", multiplyHandler)
 	fmt.Println("Server now running on port 8080...")
 	http.ListenAndServe(":8080", nil)
+}
+
+// Return incoming csv as a matrix
+func echoHandler(w http.ResponseWriter, r *http.Request) {
+	records := parseMatrix(w, r)
+	if records == nil {
+		return
+	}
+	var response string
+	for _, row := range records {
+		response = fmt.Sprintf("%s%s\n", response, strings.Join(row, ","))
+	}
+	fmt.Fprint(w, response)
+}
+
+// Return incoming csv as inverted matrix
+func invertHandler(w http.ResponseWriter, r *http.Request) {
+	records := parseMatrix(w, r)
+	if records == nil {
+		return
+	}
+	// No need to traverse empty matrix
+	if len(records) == 0 {
+		return
+	}
+	numRows := len(records)
+	numCols := len(records[0])
+	var response strings.Builder                        // Use string Builder for more efficient writing
+	for colIndex := 0; colIndex < numCols; colIndex++ { // Column-major traversal to invert matrix
+		for rowIndex := 0; rowIndex < numRows; rowIndex++ {
+			response.WriteString(strings.TrimSpace(records[rowIndex][colIndex]))
+			if rowIndex < numRows-1 {
+				response.WriteString(",") // Add commas to all rows except last row
+			}
+		}
+		response.WriteString("\n")
+	}
+	fmt.Fprint(w, response.String())
+}
+
+// Return incoming csv as single flattened array
+func flattenHandler(w http.ResponseWriter, r *http.Request) {
+	records := parseMatrix(w, r)
+	if records == nil {
+		return
+	}
+	// if len(records) == 0 {
+	// 	return
+	// }
+	var response strings.Builder
+	numRows := len(records)
+	for i, row := range records {
+		response.WriteString(strings.Join(row, ","))
+		if i < numRows-1 {
+			response.WriteString(",")
+		}
+	}
+	fmt.Fprint(w, response.String())
+}
+
+// Return sum of all values in csv
+func sumHandler(w http.ResponseWriter, r *http.Request) {
+	records := parseMatrix(w, r)
+	if records == nil {
+		return
+	}
+	// valid empty matrix case
+	if len(records) == 0 {
+		fmt.Fprint(w, "0\n")
+		return
+	}
+	numRows := len(records)
+	numCols := len(records[0])
+	// Use big for potentially massive numbers
+	sum := big.NewInt(0)
+	cnum := new(big.Int)
+	for rowIndex := 0; rowIndex < numRows; rowIndex++ {
+		for colIndex := 0; colIndex < numCols; colIndex++ {
+			cnum.SetString(records[rowIndex][colIndex], 10)
+			sum.Add(sum, cnum)
+		}
+	}
+	var response string = fmt.Sprintf("%s\n", sum)
+	fmt.Fprint(w, response)
+}
+
+// Return product of all values in csv
+func multiplyHandler(w http.ResponseWriter, r *http.Request) {
+	records := parseMatrix(w, r)
+	if records == nil {
+		return
+	}
+	if len(records) == 0 {
+		fmt.Fprint(w, "0\n")
+		return
+	}
+	numRows := len(records)
+	numCols := len(records[0])
+	product := big.NewInt(1)
+	cnum := new(big.Int)
+	for rowIndex := 0; rowIndex < numRows; rowIndex++ {
+		for colIndex := 0; colIndex < numCols; colIndex++ {
+			cnum.SetString(records[rowIndex][colIndex], 10)
+			product.Mul(product, cnum)
+		}
+	}
+	var response string = fmt.Sprintf("%s\n", product)
+	fmt.Fprint(w, response)
 }
 
 // Parse matrix by forming file, and then reading file into records [][]string
 // Validate matrix afterwards by calling checkValidMatrix
 func parseMatrix(w http.ResponseWriter, r *http.Request) [][]string {
+	// Limit maximum csv size
+	r.Body = http.MaxBytesReader(w, r.Body, 10*1024*1024)
 	file, _, err := r.FormFile("file")
 	if err != nil {
 		if err == http.ErrMissingFile {
