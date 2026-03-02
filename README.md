@@ -34,6 +34,8 @@ The test script will:
 3. Compare the actual output to the expected output for each case, marking it as either PASS or FAIL
 4. Kills the server
 
+Sample/test csv inputs have been provided in the valid and invalid directories.
+
 An additional large csv has been provided, but has been omitted from the test script for better clarity and readability of the test ouput.
 
 ### Edge Cases / Assumptions
