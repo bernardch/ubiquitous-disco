@@ -69,9 +69,6 @@ func flattenHandler(w http.ResponseWriter, r *http.Request) {
 	if records == nil {
 		return
 	}
-	// if len(records) == 0 {
-	// 	return
-	// }
 	var response strings.Builder
 	numRows := len(records)
 	for i, row := range records {
@@ -79,6 +76,9 @@ func flattenHandler(w http.ResponseWriter, r *http.Request) {
 		if i < numRows-1 {
 			response.WriteString(",")
 		}
+	}
+	if numRows > 0 {
+		response.WriteString("\n")
 	}
 	fmt.Fprint(w, response.String())
 }
@@ -136,12 +136,12 @@ func multiplyHandler(w http.ResponseWriter, r *http.Request) {
 // Parse matrix by forming file, and then reading file into records [][]string
 // Validate matrix afterwards by calling checkValidMatrix
 func parseMatrix(w http.ResponseWriter, r *http.Request) [][]string {
-	// Limit maximum csv size
-	r.Body = http.MaxBytesReader(w, r.Body, 10*1024*1024)
+	// Option to limit maximum csv size
+	// r.Body = http.MaxBytesReader(w, r.Body, 10*1024*1024)
 	file, _, err := r.FormFile("file")
 	if err != nil {
 		if err == http.ErrMissingFile {
-			http.Error(w, "error: no file uploaded. please use the key \"file=@PATH_TO_YOUR_FILE\"", http.StatusBadRequest)
+			http.Error(w, "error: no file uploaded. please use the key \"file=@/path/matrix.csv\"", http.StatusBadRequest)
 			return nil
 		}
 		http.Error(w, fmt.Sprintf("error: processing upload: %v", err), http.StatusBadRequest)
@@ -189,13 +189,3 @@ func checkValidMatrix(w http.ResponseWriter, records [][]string) bool {
 	}
 	return true
 }
-
-// THINGS TO HANDLE
-// EMPTY MATRIX with ALL INPUTS and MATH
-// HUGE NUMBERS
-// spaces between numbers (leading and trailing)
-// HUGE CSV SIZE
-// negative numbers, 0 numbers
-// non number inputs
-// invalid file
-// missing character

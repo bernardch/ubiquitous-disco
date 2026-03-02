@@ -1,67 +1,40 @@
 # League Backend Challenge
 
-In main.go you will find a basic web server written in GoLang. It accepts a single request _/echo_. Extend the webservice with the ability to perform the following operations
+## Setup
+Prior to beginning, go should already be installed.
 
-Given an uploaded csv file
+To run the web server, please run the following commands:
 ```
-1,2,3
-4,5,6
-7,8,9
-```
-
-1. Echo (given)
-    - Return the matrix as a string in matrix format.
-    
-    ```
-    // Expected output
-    1,2,3
-    4,5,6
-    7,8,9
-    ``` 
-2. Invert
-    - Return the matrix as a string in matrix format where the columns and rows are inverted
-    ```
-    // Expected output
-    1,4,7
-    2,5,8
-    3,6,9
-    ``` 
-3. Flatten
-    - Return the matrix as a 1 line string, with values separated by commas.
-    ```
-    // Expected output
-    1,2,3,4,5,6,7,8,9
-    ``` 
-4. Sum
-    - Return the sum of the integers in the matrix
-    ```
-    // Expected output
-    45
-    ``` 
-5. Multiply
-    - Return the product of the integers in the matrix
-    ```
-    // Expected output
-    362880
-    ``` 
-
-The input file to these functions is a matrix, of any dimension where the number of rows are equal to the number of columns (square). Each value is an integer, and there is no header row. matrix.csv is example valid input.  
-
-Run web server
-```
+go mod init league-backend-challenge
 go run .
 ```
 
-Send request
+Now, you can freely interact with the web server by modifying the following command:
 ```
 curl -F 'file=@/path/matrix.csv' "localhost:8080/echo"
 ```
+- replace `'file=@/path/matrix.csv'` with the path to a provided csv in the `valid/` or `invalid/` directory, or a path to your own csv
+- replace the `"echo"` command with one of: `echo, invert, flatten, sum, multiply`
+## Testing
+A script for testing the server implementation against a range of core functionalities, as well as common and uncommon edge cases has been provided. To run this test script, please allow execute permissions on the test script `test.sh` and then run it like so:
+```
+chmod +x test.sh
+./test.sh
+```
+The test script will:
+1. Start the server
+2. Test each specified csv against each endpoint available on the server
+3. Compare the actual output to the expected output for each case, marking it as either PASS or FAIL
 
-## What we're looking for
+An additional large csv has been provided, but has been omitted from the test script for better clarity and readability of the test ouput.
 
-- The solution runs
-- The solution performs all cases correctly
-- The code is easy to read
-- The code is reasonably documented
-- The code is tested
-- The code is robust and handles invalid input and provides helpful error messages
+### Edge Cases / Assumptions
+Empty csv - this should be considered valid; and will either print nothing to output, or return 0 for sum/multiply
+
+Large integer values - the web server should be able to return/print out very large integer values, and avoid potential integer overflow issues
+
+Whitespace - input csvs with whitespace surrounding any of its values should be treated as valid, and the webserver should not error out when parsing a csv with this additional whitespace
+
+Invalid matrices - input calls to the web server with input matrices that are not perfectly square, or contain non-integer values should receive a relevant/useful error message
+
+Large csvs - An option to limit the request body size has been commented out in the parseMatrix function, in consideration of potential file/bandwidth processing limits. If processing a document that goes beyond this threshold, an appropriate processing error will be returned.
