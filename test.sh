@@ -1,10 +1,12 @@
 #!/bin/bash
 
-SUCCESS=false
-trap 'if [ "$SUCCESS" = false ]; then echo -e "\n Stopping Go server (PID: $SERVER_PID)..."; kill $SERVER_PID 2>/dev/null; fi' EXIT
+trap 'echo -e "\nStopping Go server (PID: $SERVER_PID)..."; kill $SERVER_PID 2>/dev/null; rm -f temp-test-server' EXIT
+
+echo "Building Go server..."
+go build -o temp-test-server .
 
 echo "Starting Go server in the background..."
-go run . &
+./temp-test-server &
 SERVER_PID=$!
 
 echo "Waiting for server to initialize..."
@@ -129,11 +131,7 @@ echo "RESULTS: $PASSED Passed, $FAILED Failed"
 echo "======================================="
 
 if [ $FAILED -eq 0 ]; then
-    SUCCESS=true
-    kill $SERVER_PID 2>/dev/null
     exit 0
 else
-    # We don't set SUCCESS=true, so the trap will output the failure/stopping message
-    kill $SERVER_PID 2>/dev/null
     exit 1
 fi
